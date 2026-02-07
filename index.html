@@ -402,9 +402,19 @@
                 <div class="metric-change" id="returnPercent"></div>
             </div>
             <div class="metric-card">
-                <div class="metric-label">Cash Position</div>
-                <div class="metric-value" id="cashValue"></div>
-                <div class="metric-change" id="cashPercent"></div>
+                <div class="metric-label">CAGR</div>
+                <div class="metric-value" id="cagrValue">--</div>
+                <div class="metric-change" id="cagrDetail"></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Time in Market</div>
+                <div class="metric-value" id="timeInMarket">--</div>
+                <div class="metric-change"><span id="timeDetail">Track your journey</span></div>
+            </div>
+            <div class="metric-card" onclick="openGoalModal()" style="cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div class="metric-label">🎯 Goal Progress</div>
+                <div class="metric-value" id="goalProgress">--</div>
+                <div class="metric-change" id="goalDetail"><span style="color: #a78bfa;">Click to set goal →</span></div>
             </div>
         </div>
 
@@ -420,6 +430,12 @@
             <div class="chart-card full-width">
                 <div class="chart-header"><div class="chart-title">Invested vs Current Value</div></div>
                 <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <div class="chart-title">📈 Portfolio Growth Over Time</div>
+                </div>
+                <canvas id="historyChart"></canvas>
             </div>
         </div>
 
@@ -514,6 +530,36 @@
         </div>
     </div>
 
+    <!-- Goal Setting Modal -->
+    <div class="modal-overlay" id="goalModal">
+        <div class="modal" style="width: 450px;">
+            <h2>🎯 Set Your Investment Goal</h2>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>Target Amount (€)</label>
+                    <input type="number" id="goal_target" step="1000" placeholder="e.g. 100000">
+                </div>
+                <div class="form-group">
+                    <label>Target Date</label>
+                    <input type="date" id="goal_date">
+                </div>
+                <div class="form-group">
+                    <label>Starting Date</label>
+                    <input type="date" id="goal_startDate">
+                </div>
+                <div class="form-group full">
+                    <label>Goal Name (Optional)</label>
+                    <input type="text" id="goal_name" placeholder="e.g. Early Retirement, Financial Freedom">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeGoalModal()">Cancel</button>
+                <button class="btn btn-delete" onclick="clearGoal()" style="margin-right: auto;">Clear Goal</button>
+                <button class="btn btn-save" onclick="saveGoal()">Save Goal</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const USD_TO_EUR = 0.8462;
         const EUR_TO_USD = 1 / USD_TO_EUR;
@@ -538,7 +584,12 @@
         let deletingId = null;
 
         // Chart instances
-        let allocChart, assetChart, perfChart;
+        let allocChart, assetChart, perfChart, historyChart;
+
+        // Historical data and goals
+        let portfolioHistory = [];
+        let investmentGoal = null;
+        let portfolioStartDate = null;
 
         Chart.defaults.color = '#888';
         Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
@@ -555,6 +606,9 @@
         // ═══════════════════════════════
         const STORAGE_KEY = 'portfolio_holdings';
         const STORAGE_NEXTID_KEY = 'portfolio_nextId';
+        const STORAGE_HISTORY_KEY = 'portfolio_history';
+        const STORAGE_GOAL_KEY = 'portfolio_goal';
+        const STORAGE_STARTDATE_KEY = 'portfolio_startDate';
 
         function loadFromStorage() {
             try {
@@ -594,6 +648,26 @@
                 
                 if (savedNextId) {
                     nextId = parseInt(savedNextId, 10);
+                }
+                
+                // Load history, goal, and start date
+                const savedHistory = localStorage.getItem(STORAGE_HISTORY_KEY);
+                if (savedHistory) {
+                    portfolioHistory = JSON.parse(savedHistory);
+                }
+                
+                const savedGoal = localStorage.getItem(STORAGE_GOAL_KEY);
+                if (savedGoal) {
+                    investmentGoal = JSON.parse(savedGoal);
+                }
+                
+                const savedStartDate = localStorage.getItem(STORAGE_STARTDATE_KEY);
+                if (savedStartDate) {
+                    portfolioStartDate = new Date(savedStartDate);
+                } else if (holdings.length > 0) {
+                    // Set start date to today if not set
+                    portfolioStartDate = new Date();
+                    localStorage.setItem(STORAGE_STARTDATE_KEY, portfolioStartDate.toISOString());
                 }
             } catch (error) {
                 console.error('❌ Failed to load from localStorage:', error);
@@ -655,6 +729,239 @@
         }
 
         // ═══════════════════════════════
+        //  LONG-TERM INVESTOR FEATURES
+        // ═══════════════════════════════
+        
+        function saveSnapshot() {
+            const totInv = holdings.reduce((s, h) => s + h.invested, 0);
+            const totCur = holdings.reduce((s, h) => s + h.current, 0);
+            
+            const snapshot = {
+                date: new Date().toISOString(),
+                totalInvested: totInv,
+                totalValue: totCur,
+                gain: totCur - totInv
+            };
+            
+            // Check if we already have a snapshot from today
+            const today = new Date().toISOString().split('T')[0];
+            const existingIndex = portfolioHistory.findIndex(h => h.date.startsWith(today));
+            
+            if (existingIndex >= 0) {
+                portfolioHistory[existingIndex] = snapshot;
+            } else {
+                portfolioHistory.push(snapshot);
+            }
+            
+            // Keep last 90 days
+            if (portfolioHistory.length > 90) {
+                portfolioHistory = portfolioHistory.slice(-90);
+            }
+            
+            localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(portfolioHistory));
+        }
+        
+        function calculateCAGR() {
+            if (!portfolioStartDate || portfolioHistory.length < 2) return null;
+            
+            const firstSnapshot = portfolioHistory[0];
+            const lastSnapshot = portfolioHistory[portfolioHistory.length - 1];
+            
+            const startValue = firstSnapshot.totalInvested;
+            const endValue = lastSnapshot.totalValue;
+            const years = (new Date(lastSnapshot.date) - new Date(firstSnapshot.date)) / (365.25 * 24 * 60 * 60 * 1000);
+            
+            if (years < 0.01 || startValue <= 0) return null;
+            
+            const cagr = (Math.pow(endValue / startValue, 1 / years) - 1) * 100;
+            return cagr;
+        }
+        
+        function calculateTimeInMarket() {
+            if (!portfolioStartDate) return null;
+            
+            const now = new Date();
+            const diffMs = now - portfolioStartDate;
+            const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+            const years = Math.floor(days / 365);
+            const months = Math.floor((days % 365) / 30);
+            
+            return { days, years, months };
+        }
+        
+        function updateAdvancedMetrics() {
+            // CAGR
+            const cagr = calculateCAGR();
+            if (cagr !== null) {
+                const cagrEl = document.getElementById('cagrValue');
+                const cagrDetailEl = document.getElementById('cagrDetail');
+                const isPositive = cagr >= 0;
+                
+                cagrEl.textContent = (isPositive ? '+' : '') + cagr.toFixed(2) + '%';
+                cagrDetailEl.innerHTML = `<span style="color: ${isPositive ? '#10b981' : '#ef4444'}">${isPositive ? '↑' : '↓'} Annualized return</span>`;
+            } else {
+                document.getElementById('cagrValue').textContent = '--';
+                document.getElementById('cagrDetail').innerHTML = '<span>Need more history</span>';
+            }
+            
+            // Time in Market
+            const timeData = calculateTimeInMarket();
+            if (timeData) {
+                const { days, years, months } = timeData;
+                let timeText = '';
+                
+                if (years > 0) {
+                    timeText = `${years}y ${months}m`;
+                } else if (months > 0) {
+                    timeText = `${months} months`;
+                } else {
+                    timeText = `${days} days`;
+                }
+                
+                document.getElementById('timeInMarket').textContent = timeText;
+                document.getElementById('timeDetail').textContent = `${days} days invested`;
+            }
+            
+            // Goal Progress
+            if (investmentGoal) {
+                const totCur = holdings.reduce((s, h) => s + h.current, 0);
+                const progress = (totCur / investmentGoal.target) * 100;
+                const progressEl = document.getElementById('goalProgress');
+                const goalDetailEl = document.getElementById('goalDetail');
+                
+                progressEl.textContent = progress.toFixed(1) + '%';
+                
+                const remaining = investmentGoal.target - totCur;
+                const daysToTarget = investmentGoal.date ? Math.ceil((new Date(investmentGoal.date) - new Date()) / (24 * 60 * 60 * 1000)) : null;
+                
+                if (progress >= 100) {
+                    goalDetailEl.innerHTML = '<span style="color: #10b981;">🎉 Goal reached!</span>';
+                } else if (daysToTarget) {
+                    goalDetailEl.innerHTML = `<span>€${fmt(remaining)} to go • ${daysToTarget} days</span>`;
+                } else {
+                    goalDetailEl.innerHTML = `<span>€${fmt(remaining)} remaining</span>`;
+                }
+            } else {
+                document.getElementById('goalProgress').textContent = '--';
+                document.getElementById('goalDetail').innerHTML = '<span style="color: #a78bfa;">Click to set goal →</span>';
+            }
+        }
+        
+        function renderHistoryChart() {
+            if (portfolioHistory.length < 2) {
+                console.log('Not enough history data yet');
+                return;
+            }
+            
+            const dates = portfolioHistory.map(h => new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            const values = portfolioHistory.map(h => h.totalValue);
+            const invested = portfolioHistory.map(h => h.totalInvested);
+            
+            if (historyChart) {
+                historyChart.data.labels = dates;
+                historyChart.data.datasets[0].data = values;
+                historyChart.data.datasets[1].data = invested;
+                historyChart.update();
+            } else {
+                historyChart = new Chart(document.getElementById('historyChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Portfolio Value',
+                                data: values,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16,185,129,0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Amount Invested',
+                                data: invested,
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139,92,246,0.1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                tension: 0.4,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { padding: 16, font: { size: 12 }, usePointStyle: true } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': €' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                ticks: { callback: v => '€' + v.toLocaleString() }
+                            },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Goal Modal Functions
+        function openGoalModal() {
+            if (investmentGoal) {
+                document.getElementById('goal_target').value = investmentGoal.target;
+                document.getElementById('goal_date').value = investmentGoal.date || '';
+                document.getElementById('goal_startDate').value = investmentGoal.startDate || '';
+                document.getElementById('goal_name').value = investmentGoal.name || '';
+            } else {
+                document.getElementById('goal_target').value = '';
+                document.getElementById('goal_date').value = '';
+                document.getElementById('goal_startDate').value = portfolioStartDate ? portfolioStartDate.toISOString().split('T')[0] : '';
+                document.getElementById('goal_name').value = '';
+            }
+            document.getElementById('goalModal').classList.add('open');
+        }
+        
+        function closeGoalModal() {
+            document.getElementById('goalModal').classList.remove('open');
+        }
+        
+        function saveGoal() {
+            const target = parseFloat(document.getElementById('goal_target').value);
+            const date = document.getElementById('goal_date').value;
+            const startDate = document.getElementById('goal_startDate').value;
+            const name = document.getElementById('goal_name').value.trim();
+            
+            if (!target || target <= 0) {
+                alert('Please enter a valid target amount');
+                return;
+            }
+            
+            investmentGoal = { target, date, startDate, name };
+            localStorage.setItem(STORAGE_GOAL_KEY, JSON.stringify(investmentGoal));
+            
+            closeGoalModal();
+            updateAdvancedMetrics();
+        }
+        
+        function clearGoal() {
+            if (!confirm('Are you sure you want to clear your investment goal?')) return;
+            
+            investmentGoal = null;
+            localStorage.removeItem(STORAGE_GOAL_KEY);
+            closeGoalModal();
+            updateAdvancedMetrics();
+        }
+
+        // ═══════════════════════════════
         //  RENDER ALL
         // ═══════════════════════════════
         function render() {
@@ -663,6 +970,9 @@
             renderAllocChart();
             renderAssetChart();
             renderPerfChart();
+            renderHistoryChart();
+            updateAdvancedMetrics();
+            saveSnapshot();
         }
 
         function renderMetrics() {
@@ -919,7 +1229,7 @@
 
         document.addEventListener('click', closeMenus);
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') { closeMenus(); closeFormModal(); closeDeleteModal(); }
+            if (e.key === 'Escape') { closeMenus(); closeFormModal(); closeDeleteModal(); closeGoalModal(); }
         });
 
         // Enter to save in modal
@@ -930,6 +1240,7 @@
         // Close modals on overlay click
         document.getElementById('formModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeFormModal(); });
         document.getElementById('deleteModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeDeleteModal(); });
+        document.getElementById('goalModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeGoalModal(); });
 
         // ═══════════════════════════════
         //  INIT
