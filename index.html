@@ -563,6 +563,32 @@
                 
                 if (saved) {
                     holdings = JSON.parse(saved);
+                    
+                    // Migrate old data: add assetType if missing
+                    let needsSave = false;
+                    holdings.forEach(h => {
+                        if (!h.assetType) {
+                            // Auto-detect asset type based on ticker/name
+                            if (h.ticker === 'CASH') {
+                                h.assetType = 'Cash';
+                            } else if (h.name.toLowerCase().includes('etf') || ['IVV','VWCE','VUAA','NQSE','SLV'].includes(h.ticker)) {
+                                h.assetType = 'ETF';
+                            } else if (['BTC','ETH','SOL','ADA'].includes(h.ticker)) {
+                                h.assetType = 'Crypto';
+                            } else if (['XAU','XAG','GOLD','SILVER'].includes(h.ticker)) {
+                                h.assetType = 'Commodity';
+                            } else {
+                                h.assetType = 'Stock';
+                            }
+                            needsSave = true;
+                        }
+                    });
+                    
+                    if (needsSave) {
+                        console.log('🔄 Migrated old data: added assetType fields');
+                        saveToStorage();
+                    }
+                    
                     console.log('✅ Loaded portfolio from localStorage');
                 }
                 
