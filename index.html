@@ -247,10 +247,29 @@
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
             padding: 32px;
-            width: 480px;
+            width: 500px;
             max-width: 90vw;
             max-height: 90vh;
             overflow-y: auto;
+            box-sizing: border-box;
+        }
+        
+        .modal::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .modal::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+        
+        .modal::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+        
+        .modal::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
         }
 
         .modal h2 {
@@ -450,6 +469,16 @@
                     <input type="text" id="f_country" placeholder="e.g. USA">
                 </div>
                 <div class="form-group">
+                    <label>Asset Type</label>
+                    <select id="f_assetType">
+                        <option value="Stock">Stock</option>
+                        <option value="ETF">ETF</option>
+                        <option value="Commodity">Commodity</option>
+                        <option value="Crypto">Crypto</option>
+                        <option value="Cash">Cash</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Trade Currency</label>
                     <select id="f_tradeCcy">
                         <option value="EUR">EUR</option>
@@ -490,18 +519,18 @@
         const EUR_TO_USD = 1 / USD_TO_EUR;
 
         let holdings = [
-            { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR" },
-            { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR" },
-            { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD" },
-            { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD" },
-            { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD" },
-            { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD" },
-            { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD" },
-            { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD" },
-            { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD" },
-            { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD" },
-            { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR" },
-            { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR" }
+            { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
+            { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
+            { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD", assetType: "Stock" },
+            { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
+            { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
         ];
 
         let nextId = 13;
@@ -579,18 +608,18 @@
             localStorage.removeItem(STORAGE_NEXTID_KEY);
             
             holdings = [
-                { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR" },
-                { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR" },
-                { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD" },
-                { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD" },
-                { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD" },
-                { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD" },
-                { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD" },
-                { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD" },
-                { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD" },
-                { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD" },
-                { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR" },
-                { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR" }
+                { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
+                { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
+                { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
+                { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
             ];
             nextId = 13;
             
@@ -707,17 +736,15 @@
         }
 
         function renderAssetChart() {
-            const etfTickers = ['VUAA','NQSE'];
-            const techTickers = ['NVDA','AAPL','GOOG','AMZN','TSM','AVGO'];
             const types = {
-                'ETFs': holdings.filter(h => etfTickers.includes(h.ticker)).reduce((s,h) => s + h.current, 0),
-                'Tech Stocks': holdings.filter(h => techTickers.includes(h.ticker)).reduce((s,h) => s + h.current, 0),
-                'Other Stocks': holdings.filter(h => !etfTickers.includes(h.ticker) && !techTickers.includes(h.ticker) && h.ticker !== 'XAU' && h.ticker !== 'CASH').reduce((s,h) => s + h.current, 0),
-                'Commodities': holdings.filter(h => h.ticker === 'XAU').reduce((s,h) => s + h.current, 0),
-                'Cash': holdings.filter(h => h.ticker === 'CASH').reduce((s,h) => s + h.current, 0)
+                'ETFs': holdings.filter(h => h.assetType === 'ETF').reduce((s,h) => s + h.current, 0),
+                'Stocks': holdings.filter(h => h.assetType === 'Stock').reduce((s,h) => s + h.current, 0),
+                'Commodities': holdings.filter(h => h.assetType === 'Commodity').reduce((s,h) => s + h.current, 0),
+                'Crypto': holdings.filter(h => h.assetType === 'Crypto').reduce((s,h) => s + h.current, 0),
+                'Cash': holdings.filter(h => h.assetType === 'Cash').reduce((s,h) => s + h.current, 0)
             };
             const total = Object.values(types).reduce((s,v) => s + v, 0);
-            const labels = Object.keys(types).map((k,i) => `${k}  ${total > 0 ? ((Object.values(types)[i] / total) * 100).toFixed(1) : '0.0'}%`);
+            const labels = Object.keys(types).map((k,i) => `${k} ${total > 0 ? ((Object.values(types)[i] / total) * 100).toFixed(1) : '0.0'}%`);
             const data = Object.values(types);
 
             if (assetChart) {
@@ -775,6 +802,7 @@
             document.getElementById('f_name').value = '';
             document.getElementById('f_ticker').value = '';
             document.getElementById('f_country').value = '';
+            document.getElementById('f_assetType').value = 'Stock';
             document.getElementById('f_tradeCcy').value = 'EUR';
             document.getElementById('f_invested').value = '';
             document.getElementById('f_current').value = '';
@@ -791,6 +819,7 @@
             document.getElementById('f_name').value = h.name;
             document.getElementById('f_ticker').value = h.ticker;
             document.getElementById('f_country').value = h.country;
+            document.getElementById('f_assetType').value = h.assetType || 'Stock';
             document.getElementById('f_tradeCcy').value = h.tradeCcy;
             document.getElementById('f_invested').value = h.invested;
             document.getElementById('f_current').value = h.current;
@@ -807,6 +836,7 @@
             const name = document.getElementById('f_name').value.trim();
             const ticker = document.getElementById('f_ticker').value.trim().toUpperCase();
             const country = document.getElementById('f_country').value.trim();
+            const assetType = document.getElementById('f_assetType').value;
             const tradeCcy = document.getElementById('f_tradeCcy').value;
             const invested = parseFloat(document.getElementById('f_invested').value) || 0;
             const current = parseFloat(document.getElementById('f_current').value) || 0;
@@ -815,9 +845,9 @@
 
             if (editingId !== null) {
                 const h = holdings.find(x => x.id === editingId);
-                if (h) { h.name = name; h.ticker = ticker; h.country = country; h.tradeCcy = tradeCcy; h.invested = invested; h.current = current; }
+                if (h) { h.name = name; h.ticker = ticker; h.country = country; h.assetType = assetType; h.tradeCcy = tradeCcy; h.invested = invested; h.current = current; }
             } else {
-                holdings.push({ id: nextId++, name, ticker, country, tradeCcy, invested, current });
+                holdings.push({ id: nextId++, name, ticker, country, assetType, tradeCcy, invested, current });
             }
 
             closeFormModal();
