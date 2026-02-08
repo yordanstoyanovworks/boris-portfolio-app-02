@@ -1113,8 +1113,14 @@
         }
 
         function renderTable() {
+            console.log('📋 renderTable called with', holdings.length, 'holdings');
             const tbody = document.getElementById('holdingsTableBody');
             tbody.innerHTML = '';
+
+            if (holdings.length === 0) {
+                console.log('⚠️ No holdings to render in table');
+                return;
+            }
 
             holdings.forEach(h => {
                 const gain = h.current - h.invested;
@@ -1162,7 +1168,9 @@
         //  CHARTS
         // ═══════════════════════════════
         function renderAllocChart() {
+            console.log('📊 renderAllocChart called');
             const top = holdings.filter(h => h.ticker !== 'CASH').sort((a, b) => b.current - a.current).slice(0, 10);
+            console.log('📊 Top holdings for allocation:', top.length);
             const total = top.reduce((s, h) => s + h.current, 0);
             const labels = top.map(h => `${h.ticker}  ${((h.current / total) * 100).toFixed(1)}%`);
             const data = top.map(h => h.current);
@@ -1356,8 +1364,12 @@
         // ═══════════════════════════════
         //  INIT
         // ═══════════════════════════════
+        console.log('🚀 Initializing portfolio app...');
         loadFromStorage();
+        console.log('📊 Holdings after load:', holdings.length, 'items');
+        console.log('📊 Holdings data:', holdings);
         render();
+        console.log('✅ Initial render complete');
     </script>
 </body>
 </html>
