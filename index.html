@@ -382,9 +382,10 @@
                     <p class="subtitle">Last updated: February 7, 2026</p>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button onclick="exportPortfolio()" style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(139,92,246,0.25)'" onmouseout="this.style.background='rgba(139,92,246,0.15)'">💾 Export JSON</button>
-                    <button onclick="document.getElementById('importFile').click()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #10b981; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.25)'" onmouseout="this.style.background='rgba(16,185,129,0.15)'">📂 Import JSON</button>
-                    <button onclick="resetToDemo()" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">Reset Demo</button>
+                    <button onclick="exportPortfolio()" style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(139,92,246,0.25)'" onmouseout="this.style.background='rgba(139,92,246,0.15)'">💾 Export</button>
+                    <button onclick="document.getElementById('importFile').click()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #10b981; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.25)'" onmouseout="this.style.background='rgba(16,185,129,0.15)'">📂 Import</button>
+                    <button onclick="clearDashboard()" style="background: rgba(255,152,0,0.15); border: 1px solid rgba(255,152,0,0.3); color: #fb923c; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,152,0,0.25)'" onmouseout="this.style.background='rgba(255,152,0,0.15)'">🗑️ Clear</button>
+                    <button onclick="resetToDemo()" style="background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: #60a5fa; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.25)'" onmouseout="this.style.background='rgba(59,130,246,0.15)'">🔄 Demo Data</button>
                 </div>
             </div>
             <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importPortfolio(event)">
@@ -569,20 +570,7 @@
         const USD_TO_EUR = 0.8462;
         const EUR_TO_USD = 1 / USD_TO_EUR;
 
-        let holdings = [
-            { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
-            { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
-            { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD", assetType: "Stock" },
-            { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
-            { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
-        ];
+        let holdings = [];
 
         let nextId = 13;
         let editingId = null;
@@ -675,23 +663,10 @@
                     localStorage.setItem(STORAGE_STARTDATE_KEY, portfolioStartDate.toISOString());
                 }
                 
-                // Safety check: If holdings is empty after loading, restore demo data
-                if (holdings.length === 0) {
-                    console.log('⚠️ No holdings found, loading demo data...');
-                    holdings = [
-                        { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
-                        { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
-                        { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD", assetType: "Stock" },
-                        { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
-                        { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
-                    ];
+                // Safety check: If no saved data or empty holdings, load demo data
+                if (!saved || holdings.length === 0) {
+                    console.log('⚠️ No portfolio data found, loading demo data...');
+                    holdings = getDemoData();
                     nextId = 13;
                     portfolioStartDate = new Date();
                     saveToStorage();
@@ -728,13 +703,8 @@
             }, 2000);
         }
 
-        function resetToDemo() {
-            if (!confirm('⚠️ This will delete your portfolio and restore demo data. Are you sure?')) return;
-            
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.removeItem(STORAGE_NEXTID_KEY);
-            
-            holdings = [
+        function getDemoData() {
+            return [
                 { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
                 { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
                 { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
@@ -748,11 +718,41 @@
                 { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
                 { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
             ];
-            nextId = 13;
+        }
+        
+        function clearDashboard() {
+            if (!confirm('⚠️ This will DELETE ALL your portfolio data and create a blank dashboard. Are you sure?')) return;
+            
+            // Clear everything
+            holdings = [];
+            nextId = 1;
+            portfolioHistory = [];
+            investmentGoal = null;
+            portfolioStartDate = null;
+            
+            // Clear localStorage
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(STORAGE_NEXTID_KEY);
+            localStorage.removeItem(STORAGE_HISTORY_KEY);
+            localStorage.removeItem(STORAGE_GOAL_KEY);
+            localStorage.removeItem(STORAGE_STARTDATE_KEY);
             
             render();
+            alert('✅ Dashboard cleared! Start fresh by clicking "Add Holding".');
+        }
+        
+        function resetToDemo() {
+            if (!confirm('This will replace your portfolio with demo data. Continue?')) return;
+            
+            holdings = getDemoData();
+            nextId = 13;
+            portfolioHistory = [];
+            investmentGoal = null;
+            portfolioStartDate = new Date();
+            
             saveToStorage();
-            alert('✅ Portfolio reset to demo data!');
+            render();
+            alert('✅ Demo data loaded!');
         }
 
         // ═══════════════════════════════
