@@ -1183,6 +1183,13 @@
         // ═══════════════════════════════
         function renderAllocChart() {
             console.log('📊 renderAllocChart called');
+            
+            const canvas = document.getElementById('allocationChart');
+            if (!canvas) {
+                console.error('❌ Canvas #allocationChart not found!');
+                return;
+            }
+            
             const top = holdings.filter(h => h.ticker !== 'CASH').sort((a, b) => b.current - a.current).slice(0, 10);
             console.log('📊 Top holdings for allocation:', top.length);
             const total = top.reduce((s, h) => s + h.current, 0);
@@ -1378,14 +1385,37 @@
         // ═══════════════════════════════
         //  INIT
         // ═══════════════════════════════
-        document.addEventListener('DOMContentLoaded', function() {
+        function initApp() {
             console.log('🚀 Initializing portfolio app...');
+            console.log('🔍 Checking if DOM is ready...');
+            
+            // Verify critical elements exist
+            const totalValueEl = document.getElementById('totalValue');
+            const tableBodyEl = document.getElementById('holdingsTableBody');
+            
+            if (!totalValueEl || !tableBodyEl) {
+                console.error('❌ Critical DOM elements not found!');
+                console.error('totalValue:', totalValueEl);
+                console.error('holdingsTableBody:', tableBodyEl);
+                return;
+            }
+            
+            console.log('✅ DOM elements verified');
             loadFromStorage();
             console.log('📊 Holdings after load:', holdings.length, 'items');
             console.log('📊 Holdings data:', holdings);
             render();
             console.log('✅ Initial render complete');
-        });
+        }
+
+        // Run when DOM is ready (handles both early and late execution)
+        if (document.readyState === 'loading') {
+            console.log('⏳ DOM still loading, waiting...');
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            console.log('✅ DOM already ready, initializing now...');
+            initApp();
+        }
     </script>
 </body>
 </html>
