@@ -1087,6 +1087,7 @@
         }
 
         function renderMetrics() {
+            console.log('💰 renderMetrics called');
             const totInv = holdings.reduce((s, h) => s + h.invested, 0);
             const totCur = holdings.reduce((s, h) => s + h.current, 0);
             const totGain = totCur - totInv;
@@ -1096,20 +1097,33 @@
             const cashPct = totCur > 0 ? ((cashVal / totCur) * 100).toFixed(1) : '0.0';
             const pos = totGain >= 0;
 
-            document.getElementById('totalValue').textContent = '€' + fmt(totCur);
-            document.getElementById('totalInvested').textContent = '€' + fmt(totInv);
-            document.getElementById('unrealizedGain').textContent = (pos ? '+' : '-') + '€' + fmt(totGain);
+            const totalValueEl = document.getElementById('totalValue');
+            const totalInvestedEl = document.getElementById('totalInvested');
+            const unrealizedGainEl = document.getElementById('unrealizedGain');
+            const totalGainEl = document.getElementById('totalGain');
+            const returnPercentEl = document.getElementById('returnPercent');
+            const cashValueEl = document.getElementById('cashValue');
+            const cashPercentEl = document.getElementById('cashPercent');
 
-            const ge = document.getElementById('totalGain');
-            ge.className = 'metric-change ' + (pos ? 'positive' : 'negative');
-            ge.innerHTML = `<span>${pos ? '↑' : '↓'}</span><span>${pos ? '+' : '-'}€${fmt(totGain)} (${pos ? '+' : ''}${totRet}%)</span>`;
+            if (!totalValueEl) {
+                console.error('❌ Element #totalValue not found!');
+                return;
+            }
 
-            const re = document.getElementById('returnPercent');
-            re.className = 'metric-change ' + (pos ? 'positive' : 'negative');
-            re.innerHTML = `<span>${pos ? '↑' : '↓'}</span><span>${totRet}% return</span>`;
+            totalValueEl.textContent = '€' + fmt(totCur);
+            totalInvestedEl.textContent = '€' + fmt(totInv);
+            unrealizedGainEl.textContent = (pos ? '+' : '-') + '€' + fmt(totGain);
 
-            document.getElementById('cashValue').textContent = '€' + fmt(cashVal);
-            document.getElementById('cashPercent').innerHTML = `<span>${cashPct}% of portfolio</span>`;
+            totalGainEl.className = 'metric-change ' + (pos ? 'positive' : 'negative');
+            totalGainEl.innerHTML = `<span>${pos ? '↑' : '↓'}</span><span>${pos ? '+' : '-'}€${fmt(totGain)} (${pos ? '+' : ''}${totRet}%)</span>`;
+
+            returnPercentEl.className = 'metric-change ' + (pos ? 'positive' : 'negative');
+            returnPercentEl.innerHTML = `<span>${pos ? '↑' : '↓'}</span><span>${totRet}% return</span>`;
+
+            cashValueEl.textContent = '€' + fmt(cashVal);
+            cashPercentEl.innerHTML = `<span>${cashPct}% of portfolio</span>`;
+            
+            console.log('✅ renderMetrics complete');
         }
 
         function renderTable() {
@@ -1364,12 +1378,14 @@
         // ═══════════════════════════════
         //  INIT
         // ═══════════════════════════════
-        console.log('🚀 Initializing portfolio app...');
-        loadFromStorage();
-        console.log('📊 Holdings after load:', holdings.length, 'items');
-        console.log('📊 Holdings data:', holdings);
-        render();
-        console.log('✅ Initial render complete');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing portfolio app...');
+            loadFromStorage();
+            console.log('📊 Holdings after load:', holdings.length, 'items');
+            console.log('📊 Holdings data:', holdings);
+            render();
+            console.log('✅ Initial render complete');
+        });
     </script>
 </body>
 </html>
