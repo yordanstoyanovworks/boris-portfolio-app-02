@@ -376,13 +376,18 @@
 <body>
     <div class="container">
         <header>
-            <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div>
                     <h1>Portfolio Overview</h1>
                     <p class="subtitle">Last updated: February 7, 2026</p>
                 </div>
-                <button onclick="resetToDemo()" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">Reset to Demo Data</button>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="exportPortfolio()" style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(139,92,246,0.25)'" onmouseout="this.style.background='rgba(139,92,246,0.15)'">💾 Export JSON</button>
+                    <button onclick="document.getElementById('importFile').click()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #10b981; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.25)'" onmouseout="this.style.background='rgba(16,185,129,0.15)'">📂 Import JSON</button>
+                    <button onclick="resetToDemo()" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.15)'">Reset Demo</button>
+                </div>
             </div>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importPortfolio(event)">
         </header>
 
         <div class="metrics-grid">
@@ -669,6 +674,28 @@
                     portfolioStartDate = new Date();
                     localStorage.setItem(STORAGE_STARTDATE_KEY, portfolioStartDate.toISOString());
                 }
+                
+                // Safety check: If holdings is empty after loading, restore demo data
+                if (holdings.length === 0) {
+                    console.log('⚠️ No holdings found, loading demo data...');
+                    holdings = [
+                        { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
+                        { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
+                        { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD", assetType: "Stock" },
+                        { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
+                        { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
+                    ];
+                    nextId = 13;
+                    portfolioStartDate = new Date();
+                    saveToStorage();
+                }
             } catch (error) {
                 console.error('❌ Failed to load from localStorage:', error);
             }
@@ -726,6 +753,90 @@
             render();
             saveToStorage();
             alert('✅ Portfolio reset to demo data!');
+        }
+
+        // ═══════════════════════════════
+        //  IMPORT / EXPORT
+        // ═══════════════════════════════
+        
+        function exportPortfolio() {
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                holdings: holdings,
+                nextId: nextId,
+                portfolioHistory: portfolioHistory,
+                investmentGoal: investmentGoal,
+                portfolioStartDate: portfolioStartDate ? portfolioStartDate.toISOString() : null
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `portfolio-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log('✅ Portfolio exported successfully');
+            alert('✅ Portfolio exported! Check your downloads folder.');
+        }
+        
+        function importPortfolio(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!confirm('⚠️ This will replace your current portfolio. Are you sure?')) {
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    
+                    // Validate data structure
+                    if (!importData.holdings || !Array.isArray(importData.holdings)) {
+                        throw new Error('Invalid portfolio data structure');
+                    }
+                    
+                    // Import data
+                    holdings = importData.holdings;
+                    nextId = importData.nextId || 13;
+                    portfolioHistory = importData.portfolioHistory || [];
+                    investmentGoal = importData.investmentGoal || null;
+                    portfolioStartDate = importData.portfolioStartDate ? new Date(importData.portfolioStartDate) : null;
+                    
+                    // Save to localStorage
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
+                    localStorage.setItem(STORAGE_NEXTID_KEY, nextId.toString());
+                    localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(portfolioHistory));
+                    if (investmentGoal) {
+                        localStorage.setItem(STORAGE_GOAL_KEY, JSON.stringify(investmentGoal));
+                    }
+                    if (portfolioStartDate) {
+                        localStorage.setItem(STORAGE_STARTDATE_KEY, portfolioStartDate.toISOString());
+                    }
+                    
+                    // Re-render
+                    render();
+                    
+                    console.log('✅ Portfolio imported successfully');
+                    alert(`✅ Portfolio imported! Loaded ${holdings.length} holdings.`);
+                } catch (error) {
+                    console.error('❌ Import failed:', error);
+                    alert('❌ Failed to import portfolio. Please check the file format.');
+                }
+                
+                event.target.value = '';
+            };
+            
+            reader.readAsText(file);
         }
 
         // ═══════════════════════════════
