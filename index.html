@@ -572,7 +572,7 @@
 
         let holdings = [];
 
-        let nextId = 13;
+        let nextId = 1;
         let editingId = null;
         let deletingId = null;
 
@@ -602,6 +602,23 @@
         const STORAGE_HISTORY_KEY = 'portfolio_history';
         const STORAGE_GOAL_KEY = 'portfolio_goal';
         const STORAGE_STARTDATE_KEY = 'portfolio_startDate';
+
+        function getDemoData() {
+            return [
+                { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
+                { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
+                { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD", assetType: "Stock" },
+                { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
+                { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
+            ];
+        }
 
         function loadFromStorage() {
             try {
@@ -703,23 +720,6 @@
             }, 2000);
         }
 
-        function getDemoData() {
-            return [
-                { id: 1, name: "iShares Core S&P 500 ETF", ticker: "IVV", country: "USA", invested: 3200.00, current: 3680.00, tradeCcy: "EUR", assetType: "ETF" },
-                { id: 2, name: "Vanguard FTSE All-World ETF", ticker: "VWCE", country: "Global", invested: 2100.00, current: 2450.00, tradeCcy: "EUR", assetType: "ETF" },
-                { id: 3, name: "Microsoft Corporation", ticker: "MSFT", country: "USA", invested: 1850.00, current: 2340.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 4, name: "Tesla Inc", ticker: "TSLA", country: "USA", invested: 980.00, current: 750.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 5, name: "Meta Platforms Inc", ticker: "META", country: "USA", invested: 650.00, current: 890.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 6, name: "Netflix Inc", ticker: "NFLX", country: "USA", invested: 420.00, current: 580.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 7, name: "Visa Inc", ticker: "V", country: "USA", invested: 1200.00, current: 1380.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 8, name: "Johnson & Johnson", ticker: "JNJ", country: "USA", invested: 890.00, current: 920.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 9, name: "Coca-Cola Company", ticker: "KO", country: "USA", invested: 540.00, current: 610.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 10, name: "Palantir Technologies", ticker: "PLTR", country: "USA", invested: 310.00, current: 180.00, tradeCcy: "USD", assetType: "Stock" },
-                { id: 11, name: "Silver ETF", ticker: "SLV", country: "Global", invested: 450.00, current: 520.00, tradeCcy: "EUR", assetType: "Commodity" },
-                { id: 12, name: "Cash Reserve", ticker: "CASH", country: "—", invested: 1800.00, current: 1800.00, tradeCcy: "EUR", assetType: "Cash" }
-            ];
-        }
-        
         function clearDashboard() {
             if (!confirm('⚠️ This will DELETE ALL your portfolio data and create a blank dashboard. Are you sure?')) return;
             
